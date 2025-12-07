@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  projectUsers ProjectUser[]
+}
+
+model Project {
+  id        String   @id @default(cuid())
+  name      String
+  apiKey    String   @unique @default(cuid())
+  createdAt DateTime @default(now())
+  projectUsers ProjectUser[]
+  requests  Request[]
+  alerts    Alert[]
+}
+
+model ProjectUser {
+  id        String  @id @default(cuid())
+  projectId String
+  userId    String
+  role      String  @default("member")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, userId])
+}
+
+model Request {
+  id           String   @id @default(cuid())
+  projectId    String
+  provider     String
+  model        String
+  inputTokens  Int
+  outputTokens Int
+  cost         Float
+  latencyMs    Int
+  status       String
+  errorMessage String?
+  tags         Json?
+  timestamp    DateTime @default(now())
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, timestamp])
+  @@index([projectId, provider])
+  @@index([projectId, status])
+}
+
+model Alert {
+  id        String   @id @default(cuid())
+  projectId String
+  type      String
+  threshold Float
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now())
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
