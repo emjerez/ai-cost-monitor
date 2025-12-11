@@ -40,8 +40,20 @@ export async function POST(request: Request) {
       { status: 401 }
     );
   }
-  
-  const cost = 0.0001; // placeholder
+
+  // Look up pricing for this provider/model
+  const pricing = await prisma.pricing.findFirst({
+    where: {
+      provider: validatedData.provider,
+      model: validatedData.model,
+    }
+  });
+
+// Calculate cost or use 0 if pricing not found
+const cost = pricing
+  ? (validatedData.inputTokens / 1000 * pricing.inputCostPer1k) +
+    (validatedData.outputTokens / 1000 * pricing.outputCostPer1k)
+  : 0;
   
   const savedRequest = await prisma.request.create({
     data: {

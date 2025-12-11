@@ -65,3 +65,15 @@ model Alert {
   createdAt DateTime @default(now())
   project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
+
+model Pricing {
+  id             String   @id @default(cuid())
+  provider       String
+  model          String
+  inputCostPer1k Float    // Cost per 1000 input tokens
+  outputCostPer1k Float   // Cost per 1000 output tokens
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([provider, model])
+}
